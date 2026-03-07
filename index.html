@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advisory Board Interest Maps</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --text: #243043;
+      --muted: #5f6b7a;
+      --border: #d9e0ea;
+      --shadow: 0 10px 24px rgba(31, 41, 55, 0.08);
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 3fr 5fr;
+      height: 100vh;
+      gap: 18px;
+      padding: 18px;
+    }
+
+    .left-panel,
+    .right-panel {
+      background: var(--panel);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .left-header {
+      padding: 20px 22px 14px 22px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+    }
+
+    .left-header h1 {
+      margin: 0 0 6px 0;
+      font-size: 1.35rem;
+      line-height: 1.2;
+    }
+
+    .left-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.45;
+    }
+
+    .sections {
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .section {
+      margin-bottom: 16px;
+      border-radius: var(--radius-md);
+      padding: 14px;
+      border: 1px solid rgba(0,0,0,0.04);
+    }
+
+    .section-blue {
+      background: #e8f2ff;
+    }
+
+    .section-green {
+      background: #eaf7ef;
+    }
+
+    .section-rose {
+      background: #fdecee;
+    }
+
+    .section-title {
+      margin: 0 0 10px 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .section-subtitle {
+      margin: 0 0 12px 0;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .tiles {
+      display: grid;
+      gap: 10px;
+    }
+
+    .tile {
+      background: rgba(255,255,255,0.8);
+      border: 1px solid rgba(60, 72, 88, 0.10);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      backdrop-filter: blur(4px);
+    }
+
+    .tile-button {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      text-align: left;
+      padding: 14px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--text);
+      font: inherit;
+    }
+
+    .tile-button:hover {
+      background: rgba(255,255,255,0.55);
+    }
+
+    .tile-button:focus-visible {
+      outline: 3px solid rgba(59, 130, 246, 0.35);
+      outline-offset: -3px;
+    }
+
+    .tile-title {
+      font-weight: 650;
+      line-height: 1.35;
+      font-size: 0.97rem;
+    }
+
+    .chevron {
+      font-size: 1.1rem;
+      color: var(--muted);
+      transition: transform 0.22s ease;
+      flex: 0 0 auto;
+    }
+
+    .tile.open .chevron {
+      transform: rotate(90deg);
+    }
+
+    .tile-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.28s ease;
+      background: rgba(255,255,255,0.45);
+    }
+
+    .tile-content-inner {
+      padding: 0 16px 16px 16px;
+      border-top: 1px solid rgba(60, 72, 88, 0.08);
+    }
+
+    .interest-text {
+      margin: 14px 0 12px 0;
+      font-size: 0.93rem;
+      line-height: 1.55;
+      color: #2f3b4b;
+      white-space: normal;
+      word-break: normal;
+    }
+
+    .map-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #1f5fbf;
+      text-decoration: none;
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid rgba(31, 95, 191, 0.15);
+    }
+
+    .map-link:hover {
+      background: #ffffff;
+    }
+
+    .map-link small {
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .right-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+    }
+
+    .right-title {
+      min-width: 0;
+    }
+
+    .right-title h2 {
+      margin: 0 0 4px 0;
+      font-size: 1.06rem;
+      line-height: 1.25;
+    }
+
+    .right-title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .frame-wrap {
+      flex: 1;
+      min-height: 0;
+      background: #eef2f8;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #ffffff;
+    }
+
+    @media (max-width: 1100px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: 48vh 52vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="left-panel">
+      <div class="left-header">
+        <h1>Employer Input Criteria</h1>
+        <p>Click a topic to open its drawer. Then select <strong>🔎 Open interactive map</strong> to load the corresponding HTML map on the right.</p>
+      </div>
+
+      <div class="sections">
+        <section class="section section-blue">
+          <h2 class="section-title">1. Technical Skills</h2>
+          <p class="section-subtitle">Six topic areas related to infrastructure, systems, automation, and security.</p>
+          <div class="tiles">
+            <div class="tile">
+              <button class="tile-button" type="button">
+                <span class="tile-title">1.1. Enterprise Solution Architecture &amp; Engineering</span>
+                <span class="chevron">›</span>
+              </button>
+              <div class="tile-content">
+                <div class="tile-content-inner">
+                  <p class="interest-text">Understanding the principles of enterprise system architecture and engineering, including the design and integration of applications, services, and infrastructure across hybrid and multi-cloud environments.</p>
+                  <a class="map-link" href="map_1_1.html" data-map="map_1_1.html" data-title="1.1. Enterprise Solution Architecture &amp; Engineering">
+                    <span>🔎 Open interactive map</span>
+                    <small>map_1_1.html</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <button class="tile-button" type="button">
+                <span class="tile-title">1.2. Networking Fundamentals</span>
+                <span class="chevron">›</span>
+              </button>
+              <div class="tile-content">
+                <div class="tile-content-inner">
+                  <p class="interest-text">Knowledge of computer networking principles and protocols, including TCP/IP, DNS, routing, switching, VPN technologies, and the OSI model, and the ability to analyze and troubleshoot network communication.</p>
+                  <a class="map-link" href="map_1_2.html" data-map="map_1_2.html" data-title="1.2. Networking Fundamentals">
+                    <span>🔎 Open interactive map</span>
+                    <small>map_1_2.html</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <button class="tile-button" type="button">
+                <span class="tile-title">1.3. Operating Systems Proficiency</span>
+                <span class="chevron">›</span>
+              </button>
+              <div class="tile-content">
+                <div class="tile-content-inner">
+                  <p class="interest-text">Experience working with Linux and Windows operating systems, including system administration tasks, command-line tools, file systems, process management, and basic system security configuration.</p>
+                  <a class="map-link" href="map_1_3.html" data-map="map_1_3.html" data-title="1.3. Operating Systems Proficiency">
+                    <span>🔎 Open interactive map</span>
+                    <small>map_1_3.html</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <button class="tile-button" type="button">
+                <span class="tile-title">1.4. Scripting and Automation</span>
+                <span class="chevron">›</span>
+              </button>
+              <div class="tile-content">
+                <div class="tile-content-inner">
+                  <p class="interest-text">Ability to develop scripts and automation tools using languages such as Python, PowerShell, or Bash to automate operational tasks, process data and log files, and interact with system or cloud APIs.</p>
+                  <a class="map-link" href="map_1_4.html" data-map="map_1_4.html" data-title="1.4. Scripting and Automation">
+                    <span>🔎 Open interactive map</span>
+                    <small>map_1_4.html</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <button class="tile-button" type="button">
+                <span class="tile-title">1.5. Security Controls and Analysis</span>
+                <span class="chevron">›</span>
+              </button>
+              <div class="tile-content">
+                <div class="tile-content-inner">
+                  <p class="interest-text">Understanding of cybersecurity fundamentals, including firewalls, intrusion detection and prevention systems (IDS/IPS), security monitoring, and log analysis for identifying suspicious activity and indicators of compromise.</p>
+                  <a class="map-link" href="map_1_5.html" data-map="map_1_5.html" data-title="1.5. Security Controls and Analysis">
+                    <span>🔎 Open interactive map</span>
+                    <small>map_1_5.html</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <button class="tile-button" type="button">
+                <span class="tile-title">1.6. Cloud Security and Infrastructure</span>
+                <span class="chevron">›</span>
+              </button>
+              <div class="tile-content">
+                <div class="tile-content-inner">
+                  <p class="interest-text">Knowledge of cloud computing platforms and cloud security principles, including identity and access management, least-privilege access control, network segmentation, governance, risk, and compliance (GRC), and security practices in environments such as AWS, Microsoft Azure, or Google Cloud.</p>
+                  <a class="map-link" href="map_1_6.html" data-map="map_1_6.html" data-title="1.6. Cloud Security and Infrastructure">
+                    <span>🔎 Open interactive map</span>
+                    <small>map_1_6.html</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section section-green">
+          <h2 class="section-title">2. AI Systems and Autonomous Agents</h2>
+          <p class="section-subtitle">Five topic areas related to agent control, governance, evaluation, and enterprise integration.</p>
+          <div class="tiles">
+            <div class="tile">
+              <button class="tile-button" type="button">
+                <span class="tile-title">2.1. Limiting Privilege Scope and Securing AI Agents</span>
+                <span class="chevron">›</span>
+              </button>
+              <div class="tile-content">
+                <div class="tile-content-inner">
+                  <p class="interest-text">Explores methods for controlling the operational scope of artificial intelligence agents by limiting privileges, isolating execution environments, and protecting automated systems from manipulation. Topics include restricting agent permissions, designing secure execution environments, and preventing adversarial influence over an agent’s goals, reasoning paths, or operational behavior.</p>
+                  <a class="map-link" href="map_2_1.html" data-map="map_2_1.html" data-title="2.1. Limiting Privilege Scope and Securing AI Agents">
+                    <span>🔎 Open interactive map</span>
+                    <small>map_2_1.html</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <button class="tile-button" type="button">
+                <span class="tile-title">2.2. Managing and Enforcing Least Privilege for Non-Human Actors</span>
+                <span class="chevron">›</span>
+              </button>
+              <div class="tile-content">
+                <div class="tile-content-inner">
+                  <p class="interest-text">Examines how access control principles apply to automated systems, bots, and AI agents operating within enterprise environments. The material addresses identity and access management for non-human actors, monitoring automated activity, and enforcing least-privilege policies so that AI systems interact with organizational resources in a secure and controlled manner.</p>
+                  <a class="map-link" href="map_2_2.html" data-map="map_2_2.html" data-title="2.2. Managing and Enforcing Least Privilege for Non-Human Actors">
+                    <span>🔎 Open interactive map</span>
+                    <small>map_2_2.html</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <button class="tile-button" type="button">
+                <span class="tile-title">2.3. Providing Constraints, Context, and Evaluation Criteria for Autonomous Agents</span>
+                <span class="chevron">›</span>
+              </button>
+              <div class="tile-content">
+                <div class="tile-content-inner">
+                  <p class="interest-text">Addresses the challenge of supplying autonomous agents with appropriate constraints, background information, and evaluation criteria so they perform tasks effectively while remaining aligned with operational rules. Topics include structured inputs, contextual data provisioning, guardrails for automated systems, and techniques that reduce unreliable outputs such as hallucinations or rule violations.</p>
+                  <a class="map-link" href="map_2_3.html" data-map="map_2_3.html" data-title="2.3. Providing Constraints, Context, and Evaluation Criteria for Autonomous Agents">
+                    <span>🔎 Open interactive map</span>
+                    <small>map_2_3.html</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <button class="tile-button" type="button">
+                <span class="tile-title">2.4. Auditing and Interpreting AI Agent Outputs</span>
+                <span class="chevron">›</span>
+              </button>
+              <div class="tile-content">
+                <div class="tile-content-inner">
+                  <p class="interest-text">Develops the ability to critically evaluate the outputs produced by autonomous agents and trace the reasoning steps behind automated decisions. Emphasis is placed on monitoring agent behavior, validating outputs against expected criteria, examining reasoning chains, and identifying errors or inconsistencies in AI-generated results.</p>
+                  <a class="map-link" href="map_2_4.html" data-map="map_2_4.html" data-title="2.4. Auditing and Interpreting AI Agent Outputs">
+                    <span>🔎 Open interactive map</span>
+                    <small>map_2_4.html</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <button class="tile-button" type="button">
+                <span class="tile-title">2.5. Integrating AI Agents with External Tools and Enterprise Systems</span>
+                <span class="chevron">›</span>
+              </button>
+              <div class="tile-content">
+                <div class="tile-content-inner">
+                  <p class="interest-text">Introduces the ways AI agents interact with external systems such as security platforms, ticketing systems, and threat-intelligence feeds through APIs and automated workflows. Discussion includes system integration, orchestration of AI-driven processes, and the operational and security risks associated with granting automated systems access to enterprise infrastructure.</p>
+                  <a class="map-link" href="map_2_5.html" data-map="map_2_5.html" data-title="2.5. Integrating AI Agents with External Tools and Enterprise Systems">
+                    <span>🔎 Open interactive map</span>
+                    <small>map_2_5.html</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section section-rose">
+          <h2 class="section-title">3. Professional and Analytical Skills</h2>
+          <p class="section-subtitle">Five topic areas related to communication, reasoning, teamwork, resilience, and growth.</p>
+          <div class="tiles">
+            <div class="tile">
+              <button class="tile-button" type="button">
+                <span class="tile-title">3.1. Communication</span>
+                <span class="chevron">›</span>
+              </button>
+              <div class="tile-content">
+                <div class="tile-content-inner">
+                  <p class="interest-text">Ability to communicate technical concepts clearly in written and verbal form, translating complex technical issues into language understandable by non-technical stakeholders and organizational leadership.</p>
+                  <a class="map-link" href="map_3_1.html" data-map="map_3_1.html" data-title="3.1. Communication">
+                    <span>🔎 Open interactive map</span>
+                    <small>map_3_1.html</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <button class="tile-button" type="button">
+                <span class="tile-title">3.2. Analytical Problem Solving</span>
+                <span class="chevron">›</span>
+              </button>
+              <div class="tile-content">
+                <div class="tile-content-inner">
+                  <p class="interest-text">Strong analytical and critical-thinking skills for diagnosing complex technical problems, investigating incidents, and evaluating alternative solutions in dynamic environments.</p>
+                  <a class="map-link" href="map_3_2.html" data-map="map_3_2.html" data-title="3.2. Analytical Problem Solving">
+                    <span>🔎 Open interactive map</span>
+                    <small>map_3_2.html</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <button class="tile-button" type="button">
+                <span class="tile-title">3.3. Continuous Learning</span>
+                <span class="chevron">›</span>
+              </button>
+              <div class="tile-content">
+                <div class="tile-content-inner">
+                  <p class="interest-text">Demonstrated commitment to independent learning and professional development, including researching emerging technologies and maintaining current technical knowledge.</p>
+                  <a class="map-link" href="map_3_3.html" data-map="map_3_3.html" data-title="3.3. Continuous Learning">
+                    <span>🔎 Open interactive map</span>
+                    <small>map_3_3.html</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <button class="tile-button" type="button">
+                <span class="tile-title">3.4. Collaboration</span>
+                <span class="chevron">›</span>
+              </button>
+              <div class="tile-content">
+                <div class="tile-content-inner">
+                  <p class="interest-text">Ability to work effectively in interdisciplinary teams, collaborating with system administrators, software developers, analysts, and project managers to design and implement technical solutions.</p>
+                  <a class="map-link" href="map_3_4.html" data-map="map_3_4.html" data-title="3.4. Collaboration">
+                    <span>🔎 Open interactive map</span>
+                    <small>map_3_4.html</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <button class="tile-button" type="button">
+                <span class="tile-title">3.5. Professional Resilience and Initiative</span>
+                <span class="chevron">›</span>
+              </button>
+              <div class="tile-content">
+                <div class="tile-content-inner">
+                  <p class="interest-text">Ability to independently investigate problems, evaluate available resources, and develop solutions before escalating issues, demonstrating persistence and initiative in technical problem solving.</p>
+                  <a class="map-link" href="map_3_5.html" data-map="map_3_5.html" data-title="3.5. Professional Resilience and Initiative">
+                    <span>🔎 Open interactive map</span>
+                    <small>map_3_5.html</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <main class="right-panel">
+      <div class="right-header">
+        <div class="right-title">
+          <h2 id="currentMapTitle">Interactive Map Viewer</h2>
+          <p id="currentMapFile">Default view: map_1_1.html</p>
+        </div>
+      </div>
+      <div class="frame-wrap">
+        <iframe id="mapFrame" src="map_1_1.html" title="Interactive curriculum map"></iframe>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const tiles = Array.from(document.querySelectorAll('.tile'));
+    const mapFrame = document.getElementById('mapFrame');
+    const currentMapTitle = document.getElementById('currentMapTitle');
+    const currentMapFile = document.getElementById('currentMapFile');
+
+    function closeAllExcept(activeTile) {
+      tiles.forEach(tile => {
+        if (tile !== activeTile) {
+          tile.classList.remove('open');
+          const content = tile.querySelector('.tile-content');
+          content.style.maxHeight = null;
+        }
+      });
+    }
+
+    tiles.forEach(tile => {
+      const button = tile.querySelector('.tile-button');
+      const content = tile.querySelector('.tile-content');
+
+      button.addEventListener('click', () => {
+        const isOpen = tile.classList.contains('open');
+        closeAllExcept(tile);
+
+        if (isOpen) {
+          tile.classList.remove('open');
+          content.style.maxHeight = null;
+        } else {
+          tile.classList.add('open');
+          content.style.maxHeight = content.scrollHeight + 'px';
+        }
+      });
+    });
+
+    document.querySelectorAll('.map-link').forEach(link => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        const mapFile = link.getAttribute('data-map');
+        const mapTitle = link.getAttribute('data-title');
+        mapFrame.src = mapFile;
+        currentMapTitle.textContent = mapTitle;
+        currentMapFile.textContent = 'Loaded map: ' + mapFile;
+      });
+    });
+
+    window.addEventListener('resize', () => {
+      const openTile = document.querySelector('.tile.open .tile-content');
+      if (openTile) {
+        openTile.style.maxHeight = openTile.scrollHeight + 'px';
+      }
+    });
+  </script>
+</body>
+</html>
