@@ -673,17 +673,24 @@
         .trim();
     }
 
-    function matchesSelectedSchool(selectedSchool, fullUniversityName) {
-      if (!selectedSchool) return false;
-      const schoolObj = SCHOOL_RANKINGS.find(item => item.school === selectedSchool);
-      if (!schoolObj) return false;
+	function matchesSelectedSchool(selectedSchool, fullUniversityName) {
+	  if (!selectedSchool) return false;
 
-      const target = normalizeName(fullUniversityName);
-      return schoolObj.aliases.some(alias => {
-        const normAlias = normalizeName(alias);
-        return target === normAlias || target.includes(normAlias) || normAlias.includes(target);
-      });
-    }
+	  const schoolObj = SCHOOL_RANKINGS.find(item => item.school === selectedSchool);
+	  if (!schoolObj) return false;
+
+	  const target = normalizeName(fullUniversityName);
+
+	  const candidates = [schoolObj.school, ...(schoolObj.aliases || [])]
+		.map(normalizeName)
+		.filter(Boolean);
+
+	  return candidates.some(candidate =>
+		target === candidate ||
+		target.includes(candidate) ||
+		candidate.includes(target)
+	  );
+	}
 
     function rankBg(metric, value) {
       const metricStyles = {
