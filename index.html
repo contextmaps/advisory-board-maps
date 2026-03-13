@@ -549,6 +549,31 @@
       <div class="frame-wrap">
         <iframe id="mapFrame" src="map_1_1.html" title="Interactive curriculum map"></iframe>
       </div>
+	  
+      <div class="map-tools">
+        <div class="control-row">
+          <div class="control-group">
+            <label for="universitySelect">Highlight peer university</label>
+            <div class="control-inline">
+              <select id="universitySelect" class="university-select">
+                <option value="">None</option>
+              </select>
+              <button id="clearHighlightBtn" class="clear-btn" type="button">Clear highlight</button>
+            </div>
+            <div class="control-note">
+              Selected peer-school courses appear as green markers with black borders. Virginia Tech remains fixed in red.
+            </div>
+          </div>
+
+          <div id="rankingSummary" class="ranking-summary"></div>
+        </div>
+
+        <details class="ranking-drawer">
+          <summary>Show full ranking table</summary>
+          <div id="rankingTableWrap" class="ranking-table-wrap"></div>
+        </details>
+      </div>	  
+	  
     </main>
   </div>
 
@@ -557,6 +582,50 @@
     const mapFrame = document.getElementById('mapFrame');
     const currentMapTitle = document.getElementById('currentMapTitle');
     const currentMapFile = document.getElementById('currentMapFile');
+    const universitySelect = document.getElementById('universitySelect');
+    const clearHighlightBtn = document.getElementById('clearHighlightBtn');
+    const rankingSummary = document.getElementById('rankingSummary');
+    const rankingTableWrap = document.getElementById('rankingTableWrap');
+
+    const SCHOOL_RANKINGS = [
+      { school: "MIT", aliases: ["Massachusetts Institute of Technology"], BUS: 1, MIS: 2, POM: 1, SCM: 4, CMA: 3, EQV: 30 },
+      { school: "UPenn", aliases: ["University of Pennsylvania"], BUS: 1, MIS: 10, POM: 4, SCM: 30, CMA: 3, EQV: 28 },
+      { school: "Michigan", aliases: ["University of Michigan"], BUS: 4, MIS: 20, POM: 2, SCM: 7, CMA: 3, EQV: 27 },
+      { school: "Carnegie Mellon", aliases: ["Carnegie Mellon University"], BUS: 6, MIS: 1, POM: 3, SCM: 20, CMA: 3, EQV: 20 },
+      { school: "UT Austin", aliases: ["University of Texas at Austin", "The University of Texas at Austin"], BUS: 6, MIS: 7, POM: 7, SCM: 10, CMA: 2, EQV: 22 },
+      { school: "UNC", aliases: ["University of North Carolina", "University of North Carolina at Chapel Hill"], BUS: 6, MIS: 30, POM: 20, SCM: 30, CMA: 3, EQV: 29 },
+      { school: "Indiana", aliases: ["Indiana University"], BUS: 8, MIS: 6, POM: 9, SCM: 12, CMA: 2, EQV: 14 },
+      { school: "Ohio State", aliases: ["Ohio State University", "The Ohio State University"], BUS: 12, MIS: 30, POM: 12, SCM: 5, CMA: 3, EQV: 8 },
+      { school: "Wisconsin", aliases: ["University of Wisconsin", "University of Wisconsin-Madison"], BUS: 18, MIS: 30, POM: 20, SCM: 30, CMA: 3, EQV: 5 },
+      { school: "Georgia Tech", aliases: ["Georgia Institute of Technology"], BUS: 19, MIS: 2, POM: 6, SCM: 6, CMA: 3, EQV: 25 },
+      { school: "Minnesota", aliases: ["University of Minnesota"], BUS: 19, MIS: 5, POM: 20, SCM: 22, CMA: 3, EQV: 17 },
+      { school: "Washington", aliases: ["University of Washington"], BUS: 19, MIS: 20, POM: 30, SCM: 30, CMA: 3, EQV: 17 },
+      { school: "Georgia", aliases: ["University of Georgia"], BUS: 19, MIS: 20, POM: 30, SCM: 30, CMA: 2, EQV: 4 },
+      { school: "Florida", aliases: ["University of Florida"], BUS: 23, MIS: 30, POM: 30, SCM: 30, CMA: 2, EQV: 22 },
+      { school: "Maryland", aliases: ["University of Maryland", "University of Maryland College Park"], BUS: 24, MIS: 9, POM: 30, SCM: 20, CMA: 2, EQV: 8 },
+      { school: "Arizona State", aliases: ["Arizona State University"], BUS: 24, MIS: 11, POM: 11, SCM: 2, CMA: 1, EQV: 5 },
+      { school: "Purdue", aliases: ["Purdue University"], BUS: 24, MIS: 20, POM: 4, SCM: 9, CMA: 3, EQV: 2 },
+      { school: "Michigan State", aliases: ["Michigan State University"], BUS: 24, MIS: 30, POM: 7, SCM: 1, CMA: 3, EQV: 14 },
+      { school: "Penn State", aliases: ["Pennsylvania State University", "Penn State University"], BUS: 24, MIS: 30, POM: 20, SCM: 8, CMA: 3, EQV: 25 },
+      { school: "Texas A&M", aliases: ["Texas A&M University"], BUS: 24, MIS: 30, POM: 20, SCM: 30, CMA: 2, EQV: 14 },
+      { school: "UIUC", aliases: ["University of Illinois", "University of Illinois Urbana-Champaign"], BUS: 26, MIS: 20, POM: 30, SCM: 20, CMA: 2, EQV: 22 },
+      { school: "UT Dallas", aliases: ["University of Texas at Dallas"], BUS: 31, MIS: 20, POM: 30, SCM: 30, CMA: 1, EQV: 3 },
+      { school: "Arizona", aliases: ["University of Arizona"], BUS: 32, MIS: 2, POM: 30, SCM: 30, CMA: 2, EQV: 5 },
+      { school: "Iowa", aliases: ["University of Iowa"], BUS: 32, MIS: 30, POM: 30, SCM: 30, CMA: 3, EQV: 12 },
+      { school: "Pittsburgh", aliases: ["University of Pittsburgh"], BUS: 34, MIS: 30, POM: 30, SCM: 30, CMA: 3, EQV: 8 },
+      { school: "Tennessee", aliases: ["University of Tennessee"], BUS: 37, MIS: 30, POM: 30, SCM: 3, CMA: 2, EQV: 12 },
+      { school: "Virginia Tech", aliases: ["Virginia Tech"], BUS: 40, MIS: 30, POM: 30, SCM: 30, CMA: 1, EQV: 1 },
+      { school: "South Carolina", aliases: ["University of South Carolina"], BUS: 41, MIS: 30, POM: 30, SCM: 30, CMA: 3, EQV: 8 },
+      { school: "Miami", aliases: ["University of Miami"], BUS: 41, MIS: 30, POM: 30, SCM: 30, CMA: 2, EQV: 20 },
+      { school: "Auburn", aliases: ["Auburn University"], BUS: 51, MIS: 30, POM: 30, SCM: 20, CMA: 1, EQV: 17 }
+    ];
+
+    const SELECTABLE_SCHOOLS = SCHOOL_RANKINGS.filter(item => item.school !== "Virginia Tech");
+
+    const TRACE_DEFAULTS = {
+      "Equivalent": { color: "blue", size: 7, opacity: 0.85 },
+      "Other": { color: "gray", size: 5, opacity: 0.45 }
+    };
 
     function closeAllExcept(activeTile) {
       tiles.forEach(tile => {
@@ -597,12 +666,258 @@
       });
     });
 
+    function normalizeName(value) {
+      return String(value || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+    }
+
+    function matchesSelectedSchool(selectedSchool, fullUniversityName) {
+      if (!selectedSchool) return false;
+      const schoolObj = SCHOOL_RANKINGS.find(item => item.school === selectedSchool);
+      if (!schoolObj) return false;
+
+      const target = normalizeName(fullUniversityName);
+      return schoolObj.aliases.some(alias => {
+        const normAlias = normalizeName(alias);
+        return target === normAlias || target.includes(normAlias) || normAlias.includes(target);
+      });
+    }
+
+    function rankBg(metric, value) {
+      const metricStyles = {
+        BUS: { rgb: [234, 114, 114], min: 1, max: 51 },
+        MIS: { rgb: [112, 190, 111], min: 1, max: 30 },
+        POM: { rgb: [112, 190, 111], min: 1, max: 30 },
+        SCM: { rgb: [112, 190, 111], min: 1, max: 30 },
+        CMA: { rgb: [53, 176, 233], min: 1, max: 3 },
+        EQV: { rgb: [240, 171, 84], min: 1, max: 30 }
+      };
+
+      const style = metricStyles[metric];
+      const span = Math.max(style.max - style.min, 1);
+      const t = Math.max(0, Math.min(1, (style.max - value) / span));
+      const alpha = 0.16 + 0.54 * t;
+      return `rgba(${style.rgb[0]}, ${style.rgb[1]}, ${style.rgb[2]}, ${alpha})`;
+    }
+
+    function badgeHtml(metric, value) {
+      return `
+        <span class="rank-badge" style="background:${rankBg(metric, value)};">
+          <span class="label">${metric}</span>
+          <span class="value">${value}</span>
+        </span>
+      `;
+    }
+
+    function renderRankingSummary(selectedSchool, highlightedCount) {
+      if (!selectedSchool) {
+        rankingSummary.innerHTML = `
+          <h3>No peer university selected</h3>
+          <p>Select one school from the dropdown to highlight its courses in green and view its benchmark profile.</p>
+        `;
+        return;
+      }
+
+      const row = SCHOOL_RANKINGS.find(item => item.school === selectedSchool);
+      if (!row) {
+        rankingSummary.innerHTML = `
+          <h3>${selectedSchool}</h3>
+          <p>Ranking data is not available for this selection.</p>
+        `;
+        return;
+      }
+
+      rankingSummary.innerHTML = `
+        <h3>${row.school}</h3>
+        <p>Benchmark ranks for the selected university.</p>
+        <div class="rank-badges">
+          ${badgeHtml('BUS', row.BUS)}
+          ${badgeHtml('MIS', row.MIS)}
+          ${badgeHtml('POM', row.POM)}
+          ${badgeHtml('SCM', row.SCM)}
+          ${badgeHtml('CMA', row.CMA)}
+          ${badgeHtml('EQV', row.EQV)}
+        </div>
+        <div class="selected-count">Highlighted courses on current map: ${highlightedCount}</div>
+      `;
+    }
+
+    function renderRankingTable(selectedSchool = '') {
+      const headers = ['SCHOOL', 'BUS', 'MIS', 'POM', 'SCM', 'CMA', 'EQV'];
+
+      const headHtml = `
+        <thead>
+          <tr>
+            ${headers.map(h => `<th>${h}</th>`).join('')}
+          </tr>
+        </thead>
+      `;
+
+      const bodyHtml = SCHOOL_RANKINGS.map(row => {
+        const selectedClass = row.school === selectedSchool ? 'selected-row' : '';
+        return `
+          <tr class="${selectedClass}">
+            <td>${row.school}</td>
+            <td style="background:${rankBg('BUS', row.BUS)};">${row.BUS}</td>
+            <td style="background:${rankBg('MIS', row.MIS)};">${row.MIS}</td>
+            <td style="background:${rankBg('POM', row.POM)};">${row.POM}</td>
+            <td style="background:${rankBg('SCM', row.SCM)};">${row.SCM}</td>
+            <td style="background:${rankBg('CMA', row.CMA)};">${row.CMA}</td>
+            <td style="background:${rankBg('EQV', row.EQV)};">${row.EQV}</td>
+          </tr>
+        `;
+      }).join('');
+
+      rankingTableWrap.innerHTML = `
+        <table class="ranking-table">
+          ${headHtml}
+          <tbody>${bodyHtml}</tbody>
+        </table>
+      `;
+    }
+
+    function populateUniversitySelector() {
+      SELECTABLE_SCHOOLS.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.school;
+        option.textContent = item.school;
+        universitySelect.appendChild(option);
+      });
+    }
+
+    function waitForPlotInFrame(maxAttempts = 30, delayMs = 150) {
+      return new Promise(resolve => {
+        let attempts = 0;
+
+        function probe() {
+          attempts += 1;
+          const doc = mapFrame.contentDocument;
+          const gd = doc ? doc.querySelector('.plotly-graph-div') : null;
+
+          if (gd && gd.data && gd.data.length) {
+            resolve(gd);
+            return;
+          }
+
+          if (attempts >= maxAttempts) {
+            resolve(null);
+            return;
+          }
+
+          setTimeout(probe, delayMs);
+        }
+
+        probe();
+      });
+    }
+
+    async function applyUniversityHighlight() {
+      const selectedSchool = universitySelect.value || '';
+      const gd = await waitForPlotInFrame();
+	  
+      console.log("=== applyUniversityHighlight ===");
+      console.log("Selected school:", selectedSchool);
+      console.log("Frame document available:", !!mapFrame.contentDocument);
+      console.log("Plot div found:", !!gd);
+      console.log("Plotly available:", !!(mapFrame.contentWindow && mapFrame.contentWindow.Plotly));
+
+      if (gd && gd.data) {
+        console.log("Trace names:", gd.data.map(t => t.name));
+      }	  
+	  
+	  
+
+      if (!gd || !mapFrame.contentWindow || !mapFrame.contentWindow.Plotly) {
+        renderRankingSummary(selectedSchool, 0);
+        renderRankingTable(selectedSchool);
+        return;
+      }
+
+      const PlotlyRef = mapFrame.contentWindow.Plotly;
+      let highlightedCount = 0;
+
+      ['Equivalent', 'Other'].forEach(traceName => {
+        const traceIndex = gd.data.findIndex(trace => trace.name === traceName);
+		
+        console.log("Looking for trace:", traceName, "traceIndex:", traceIndex);		
+		
+        if (traceIndex < 0) return;
+
+        const trace = gd.data[traceIndex];
+        const customdata = trace.customdata || [];
+		
+        console.log("Trace", traceName, "point count:", customdata.length);		
+		
+        const base = TRACE_DEFAULTS[traceName];
+
+        const colors = [];
+        const sizes = [];
+        const opacities = [];
+        const lineColors = [];
+        const lineWidths = [];
+
+        customdata.forEach(row => {
+          const fullUniversityName = Array.isArray(row) ? row[1] : '';
+          const isSelected = matchesSelectedSchool(selectedSchool, fullUniversityName);
+
+          if (selectedSchool && isSelected) {
+            highlightedCount += 1;
+            colors.push('#22c55e');
+            sizes.push(8.5);
+            opacities.push(0.96);
+            lineColors.push('#111827');
+            lineWidths.push(1.25);
+          } else {
+            colors.push(base.color);
+            sizes.push(base.size);
+            opacities.push(base.opacity);
+            lineColors.push('rgba(0,0,0,0)');
+            lineWidths.push(0);
+          }
+        });
+		
+        const selectedInTrace = colors.filter(c => c === '#22c55e').length;
+        console.log("Trace", traceName, "selected points:", selectedInTrace);		
+		
+        PlotlyRef.restyle(gd, {
+          'marker.color': [colors],
+          'marker.size': [sizes],
+          'marker.opacity': [opacities],
+          'marker.line.color': [lineColors],
+          'marker.line.width': [lineWidths]
+        }, [traceIndex]);
+      });
+	  
+	  console.log("Total highlighted count:", highlightedCount);
+
+      renderRankingSummary(selectedSchool, highlightedCount);
+      renderRankingTable(selectedSchool);
+    }
+
+    universitySelect.addEventListener('change', applyUniversityHighlight);
+
+    clearHighlightBtn.addEventListener('click', () => {
+      universitySelect.value = '';
+      applyUniversityHighlight();
+    });
+
+    mapFrame.addEventListener('load', () => {
+      setTimeout(applyUniversityHighlight, 180);
+    });
+
     window.addEventListener('resize', () => {
       const openTile = document.querySelector('.tile.open .tile-content');
       if (openTile) {
         openTile.style.maxHeight = openTile.scrollHeight + 'px';
       }
     });
+
+    populateUniversitySelector();
+    renderRankingSummary('', 0);
+    renderRankingTable('');
+    setTimeout(applyUniversityHighlight, 300);
   </script>
 </body>
 </html>
